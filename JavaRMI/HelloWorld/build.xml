@@ -1,0 +1,64 @@
+<project name="HelloWorld" basedir="." default="main">
+    <property name="ant.build.javac.source" value="1.8"/>
+    <property name="ant.build.javac.target" value="1.8"/>
+
+    <property name="src.serveur.dir" value="Serveur"/>
+    <property name="src.client.dir" value="Client"/>
+    
+    <property name="build.dir"   value="build"/>
+    <property name="build.serveur.dir" value="${build.dir}/Serveur"/>
+    <property name="classes.serveur.dir" value="${build.serveur.dir}/classes"/>
+    <property name="jar.serveur.dir"     value="${build.serveur.dir}/jar"/>
+    <property name="build.client.dir" value="${build.dir}/Cient"/>
+    <property name="classes.client.dir" value="${build.client.dir}/classes"/>
+    <property name="jar.client.dir"     value="${build.client.dir}/jar"/>
+
+    <property name="serveur-main-class"  value="ImpServeurHello"/>
+    <property name="client-main-class"  value="ClientHello"/>
+
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="compile-serveur">
+        <mkdir dir="${classes.serveur.dir}"/>
+        <javac srcdir="${src.serveur.dir}" destdir="${classes.serveur.dir}"/>
+        <rmic classname="ImpServeurHello" base="${classes.serveur.dir}"/>
+    </target>
+    
+    <target name="compile-client" depends="compile-serveur">
+        <mkdir dir="${classes.client.dir}"/>
+        <javac classpath="${classes.serveur.dir}:." srcdir="${src.client.dir}" destdir="${classes.client.dir}"/>
+    </target>
+
+    <target name="jar-serveur" depends="compile-serveur">
+        <mkdir dir="${jar.serveur.dir}"/>
+        <jar destfile="${jar.serveur.dir}/${ant.project.name}-serveur.jar" basedir="${classes.serveur.dir}">
+            
+            <manifest>
+                <attribute name="Main-Class" value="${serveur-main-class}"/>
+            </manifest>
+        </jar>
+    </target>
+    
+    <target name="jar-client" depends="compile-client">
+        <mkdir dir="${jar.client.dir}"/>
+        <jar destfile="${jar.client.dir}/${ant.project.name}-client.jar" basedir="${classes.client.dir}">
+            <fileset dir="${classes.serveur.dir}" includes="*Stub*"/>
+            <fileset dir="${classes.serveur.dir}" includes="Hello.class"/>
+            <manifest>
+                <attribute name="Main-Class" value="${client-main-class}"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="run-serveur" depends="jar-serveur">
+        <java jar="${jar.serveur.dir}/${ant.project.name}-serveur.jar" fork="true"/>
+    </target>
+    
+    <target name="run-client" depends="jar-client">
+        <java jar="${jar.client.dir}/${ant.project.name}-client.jar" fork="true"/>
+    </target>
+
+</project>
